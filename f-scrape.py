@@ -98,25 +98,25 @@ def parseURLs(ns, index):
 def getSWFs(ns, urls):
 	verbose = ns.V
 	organize = ns.O
-	path = ns.PATH
-
-	if (path[len(path)-1] != '/'):
-		path += '/'
 
 	for t, u in urls:
 		
+		path = ns.PATH
+
+		if (path[len(path)-1] != '/'):
+			path += '/'
+
 		exp = re.compile(r'[^/]*?\.swf')
 		fname = exp.search(u).group()
 
-		if (organize and not os.path.isdir(path + t)):
-			os.makedirs(path + t, 0755)
+		if (organize):
+			if (not os.path.isdir(path + t)):
+				os.makedirs(path + t, 0755)
+				if (verbose): print('creating dir \"' + path + '\"')
 
-			pathnew = path + t + '/'
+			path = path + t + '/'
 
-			if (verbose):
-				print('creating dir \"' + pathnew + '\"')
-
-		if (not os.path.isfile(pathnew + fname)):
+		if (not os.path.isfile(path + fname)):
 			if (verbose): print('GET ' + u)		
 
 			req = urllib.urlopen(u)
@@ -125,9 +125,9 @@ def getSWFs(ns, urls):
 			for line in req:
 				swf += line
 
-			if (verbose): print('writing file \"' + pathnew + fname + '\"')
+			if (verbose): print('writing file \"' + path + fname + '\"')
 
-			fh = open(pathnew + fname, 'w')
+			fh = open(path + fname, 'w')
 			fh.write(swf)
 			fh.close()
 
