@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import os
+import time
 import argparse
 import urllib
 import re
@@ -12,11 +13,22 @@ def main():
 		print('Error: no flags supplied')
 		exit(1)
 
-	index = fetchIndex()
+	while (True):
 
-	urls = parseURLs(args, index)
+		if (args.V):
+			t = time.localtime()
 
-	getSWFs(args, urls)
+			print('[' + str(t[0]) + '-' + str(t[1]) + '-' + str(t[2]) + ' ' + str(t[3]) + ':' + str(t[4]) + '] ' + 'Scraping...')
+
+		index = fetchIndex()
+
+		urls = parseURLs(args, index)
+
+		getSWFs(args, urls)
+
+		if (args.V): print('Scrape complete')
+
+		time.sleep(args.T)
 
 def initArgs():
 	parser = argparse.ArgumentParser(description='scrape files from /f/')
@@ -36,6 +48,9 @@ def initArgs():
 											help='scrape [A]')
 	flags.add_argument('-Q', dest='Q', action='store_true',
 											help='scrape [?]')
+	parser.add_argument('-t', dest='T', action='store',
+											type=int, default=300, metavar='SECONDS',
+											help='sets refresh rate in seconds')
 	parser.add_argument('-v', dest='V', action='store_true',
 											help='enable verbose output')
 	parser.add_argument('-o', dest='O', action='store_true',
@@ -68,7 +83,6 @@ def parseURLs(ns, index):
 	for k, v in flags.items():
 		if (v):
 			if (verbose): print(k)
-			#exp = re.compile(r'<tr><td>\d+<\/td><td class=\"\"><span class=\"name\">.*?<\/span><\/td>.*?\[A\].*?<\/tr>')
 			exp = re.compile(r'<td>\[<a[^>]*?>[^/]*?<\/a>\]<\/td><td>\[' + k + '\]<\/td>')
 			matched = exp.finditer(index)
 			for line in matched:
@@ -76,28 +90,12 @@ def parseURLs(ns, index):
 				swf = exp.search(line.group())
 				if (verbose): print('http:'+swf.group(1))
 				urls.append((k, 'http:'+swf.group(1)))
-			if (verbose): print('\n')
+
+	print('')
 
 	return urls
 
 def getSWFs(ns, urls):
-	verbose = ns.V
-
-	for t, u in urls:
-		if (verbose): print('GET ' + u)
-
-		req = urllib.urlopen(u)
-		swf = ''
-
-		for line in req:
-			swf += line
-
-		exp = re.compile(r'[^/]*?\.swf')
-		fname = exp.search(u).group()
-
-		storeFile(ns, t, fname, swf)
-
-def storeFile(ns, cat, fname, swf):
 	verbose = ns.V
 	organize = ns.O
 	path = ns.PATH
@@ -105,21 +103,33 @@ def storeFile(ns, cat, fname, swf):
 	if (path[len(path)-1] != '/'):
 		path += '/'
 
-	if (organize and not os.path.isdir(path + cat)):
-		os.makedirs(path + cat, 0755)
-		if (verbose): print('creating dir \"' + path + cat + '\"')
-		if (not os.path.isfile(path + cat + '/' + fname)):
-			if (verbose): print('writing file \"' + path + cat + '/' + fname + '\"')
-			fh = open(path + cat + '/' + fname, 'w')
+	for t, u in urls:
+		
+		exp = re.compile(r'[^/]*?\.swf')
+		fname = exp.search(u).group()
+
+		if (organize and not os.path.isdir(path + t)):
+			os.makedirs(path + t, 0755)
+
+			pathnew = path + t + '/'
+
+			if (verbose):
+				print('creating dir \"' + pathnew + '\"')
+
+		if (not os.path.isfile(pathnew + fname)):
+			if (verbose): print('GET ' + u)		
+
+			req = urllib.urlopen(u)
+			swf = ''
+
+			for line in req:
+				swf += line
+
+			if (verbose): print('writing file \"' + pathnew + fname + '\"')
+
+			fh = open(pathnew + fname, 'w')
 			fh.write(swf)
 			fh.close()
-	else:
-		if (not os.path.isfile(path + '/' + fname)):
-			if (verbose): print('writing file \"' + path + '/' + fname + '\"')
-			fh = open(path + '/' + fname, 'w')
-			fh.write(swf)
-			fh.close()
-			
 
 if __name__ == '__main__':
 	main()
