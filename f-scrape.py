@@ -32,6 +32,8 @@ def initArgs():
 											help='scrape [P]')
 	flags.add_argument('-J', dest='J', action='store_true',
 											help='scrape [J]')
+	flags.add_argument('-A', dest='A', action='store_true',
+											help='scrape [A]')
 	flags.add_argument('-Q', dest='Q', action='store_true',
 											help='scrape [?]')
 	parser.add_argument('-v', dest='V', action='store_true',
@@ -43,7 +45,7 @@ def initArgs():
 	return parser.parse_args()
 
 def checkFlags(ns):
-	if (not (ns.H or  ns.L or ns.G or ns.P or ns.Q or ns.J)):
+	if (not (ns.H or  ns.L or ns.G or ns.P or ns.Q or ns.J or ns.A)):
 		return False
 	else:
 		return True
@@ -60,17 +62,18 @@ def fetchIndex():
 
 def parseURLs(ns, index):
 	verbose = ns.V
-	flags = dict({'H': ns.H, 'L': ns.L, 'G': ns.G, 'P': ns.P, 'J': ns.J, '?': ns.Q});
+	flags = dict({'H': ns.H, 'L': ns.L, 'G': ns.G, 'P': ns.P, 'J': ns.J, 'A': ns.A, '?': ns.Q});
 	urls = []
 
 	for k, v in flags.items():
 		if (v):
 			if (verbose): print(k)
-			exp = re.compile(r'<tr><td>\d+<\/td><td class=\"\"><span class=\"name\">.*?\[' + k + '\].*?<\/tr>')
+			#exp = re.compile(r'<tr><td>\d+<\/td><td class=\"\"><span class=\"name\">.*?<\/span><\/td>.*?\[A\].*?<\/tr>')
+			exp = re.compile(r'<td>\[<a[^>]*?>[^/]*?<\/a>\]<\/td><td>\[' + k + '\]<\/td>')
 			matched = exp.finditer(index)
 			for line in matched:
 				exp = re.compile(r'href=\"(.*?\.swf)\"')
-				swf = exp.search(line.group()+'\n')
+				swf = exp.search(line.group())
 				if (verbose): print('http:'+swf.group(1))
 				urls.append((k, 'http:'+swf.group(1)))
 			if (verbose): print('\n')
@@ -105,12 +108,18 @@ def storeFile(ns, cat, fname, swf):
 	if (organize and not os.path.isdir(path + cat)):
 		os.makedirs(path + cat, 0755)
 		if (verbose): print('creating dir \"' + path + cat + '\"')
-
-	if (not os.path.isfile(path + cat + '/' + fname)):
-		if (verbose): print('writing file \"' + path + cat + '/' + fname + '\"')
-		fh = open(path + cat + '/' + fname, 'w')
-		fh.write(swf)
-		fh.close()
+		if (not os.path.isfile(path + cat + '/' + fname)):
+			if (verbose): print('writing file \"' + path + cat + '/' + fname + '\"')
+			fh = open(path + cat + '/' + fname, 'w')
+			fh.write(swf)
+			fh.close()
+	else:
+		if (not os.path.isfile(path + '/' + fname)):
+			if (verbose): print('writing file \"' + path + '/' + fname + '\"')
+			fh = open(path + '/' + fname, 'w')
+			fh.write(swf)
+			fh.close()
+			
 
 if __name__ == '__main__':
 	main()
