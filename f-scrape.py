@@ -83,6 +83,8 @@ def parseURLs(ns, index):
 	for k, v in flags.items():
 		if (v):
 			if (verbose): print(k)
+			if (k == '?'):
+				k = '\?'
 			exp = re.compile(r'<td>\[<a[^>]*?>[^/]*?<\/a>\]<\/td><td>\[' + k + '\]<\/td>')
 			matched = exp.finditer(index)
 			for line in matched:
@@ -109,6 +111,9 @@ def getSWFs(ns, urls):
 		exp = re.compile(r'[^/]*?\.swf')
 		fname = exp.search(u).group()
 
+		if (len(fname) > 251):
+			fname = fname[:251]
+
 		if (organize):
 			if (not os.path.isdir(path + t)):
 				os.makedirs(path + t, 0755)
@@ -125,11 +130,13 @@ def getSWFs(ns, urls):
 			for line in req:
 				swf += line
 
-			if (verbose): print('writing file \"' + path + fname + '\"')
-
-			fh = open(path + fname, 'w')
-			fh.write(swf)
-			fh.close()
+			try:
+				if (verbose): print('writing file \"' + path + fname + '\"')
+				fh = open(path + fname, 'w')
+				fh.write(swf)
+				fh.close()
+			except Exception:
+				pass
 
 if __name__ == '__main__':
 	main()
