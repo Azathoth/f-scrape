@@ -5,6 +5,7 @@ import time
 import argparse
 import urllib
 import re
+import urldecode
 
 def main():
 	args = initArgs()
@@ -83,9 +84,12 @@ def parseURLs(ns, index):
 	for k, v in flags.items():
 		if (v):
 			if (verbose): print(k)
+			m = ''
 			if (k == '?'):
-				k = '\?'
-			exp = re.compile(r'<td>\[<a[^>]*?>[^/]*?<\/a>\]<\/td><td>\[' + k + '\]<\/td>')
+				m = '\?'
+			else:
+				m = k
+			exp = re.compile(r'<td>\[<a[^>]*?>[^/]*?<\/a>\]<\/td><td>\[' + m + '\]<\/td>')
 			matched = exp.finditer(index)
 			for line in matched:
 				exp = re.compile(r'href=\"(.*?\.swf)\"')
@@ -110,6 +114,7 @@ def getSWFs(ns, urls):
 
 		exp = re.compile(r'[^/]*?\.swf')
 		fname = exp.search(u).group()
+		fname = urldecode(fname)
 
 		if (len(fname) > 251):
 			fname = fname[:251]
