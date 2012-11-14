@@ -3,9 +3,8 @@
 import os
 import time
 import argparse
-import urllib
+import urllib2
 import re
-import urldecode
 
 def main():
 	args = initArgs()
@@ -67,7 +66,7 @@ def checkFlags(ns):
 		return True
 
 def fetchIndex():
-	req = urllib.urlopen('http://boards.4chan.org/f/')
+	req = urllib2.urlopen('http://boards.4chan.org/f/')
 
 	content = ''
 
@@ -114,7 +113,7 @@ def getSWFs(ns, urls):
 
 		exp = re.compile(r'[^/]*?\.swf')
 		fname = exp.search(u).group()
-		fname = urldecode(fname)
+		fname = urllib2.unquote(fname).decode("utf8")
 
 		if (len(fname) > 251):
 			fname = fname[:251]
@@ -129,7 +128,7 @@ def getSWFs(ns, urls):
 		if (not os.path.isfile(path + fname)):
 			if (verbose): print('GET ' + u)		
 
-			req = urllib.urlopen(u)
+			req = urllib2.urlopen(u)
 			swf = ''
 
 			for line in req:

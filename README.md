@@ -3,9 +3,10 @@ f-scrape
 
 /f/ Scraper. It scrapes files from /f/. Allows you to choose which category you'd like to scrape. Check the help (f-scrape -h).
 
-v0.6.6 - 11/14/12
+v0.7.0 - 11/14/12
 -----------------
 +Fixed ? directory naming bug
++Fixed URL decoding
 
 v0.6.5 - 10/24/12
 -----------------
